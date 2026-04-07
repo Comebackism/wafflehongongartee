@@ -20,7 +20,7 @@ function OrderApp() {
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState<OrderItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [orderComplete, setOrderComplete] = useState<string | null>(null);
+  const [orderComplete, setOrderComplete] = useState<{id: string, name: string} | null>(null);
   const [customerName, setCustomerName] = useState('');
 
   // For modal / bottom sheet to select toppings
@@ -85,13 +85,14 @@ function OrderApp() {
     let total = cartTotalAmount;
 
     try {
+      const finalName = customerName.trim() || 'ไม่ระบุชื่อ';
       const orderId = await submitOrder({
         items: cart,
         totalPrice: total,
         tableOrQueue: tableOrQueue,
-        customerName: customerName.trim() || 'ไม่ระบุชื่อ'
+        customerName: finalName
       });
-      setOrderComplete(orderId);
+      setOrderComplete({ id: orderId, name: finalName });
       setCart([]);
       setCustomerName('');
     } catch(err) {
@@ -118,8 +119,12 @@ function OrderApp() {
         <h1 className="mb-2 text-3xl font-extrabold text-gray-900 tracking-tight">ได้รับออเดอร์แล้ว!</h1>
         <p className="mb-8 text-gray-600 text-lg">ออเดอร์ของคุณถูกส่งไปยังห้องครัวแล้ว กรุณารอสักครู่นะครับ</p>
         <div className="w-full max-w-sm rounded-2xl border border-red-200 bg-white px-8 py-6 shadow-xl shadow-red-50">
-           <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">รหัสออเดอร์</p>
-           <p className="mt-1 font-mono text-xl font-bold text-red-600">{orderComplete}</p>
+           <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">ออเดอร์ของคุณ</p>
+           <p className="mt-1 text-2xl font-black text-gray-900">{orderComplete.name}</p>
+           <div className="mt-4 pt-4 border-t border-gray-100">
+             <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">รหัสออเดอร์</p>
+             <p className="mt-1 font-mono text-lg font-bold text-red-600">{orderComplete.id}</p>
+           </div>
         </div>
         <button 
           onClick={() => setOrderComplete(null)} 
