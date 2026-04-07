@@ -3,8 +3,8 @@
 import { useState, useEffect, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { fetchMenus, submitOrder, MenuItem, OrderItem, DEFAULT_MENUS } from '@/lib/firebase/api';
+import WaffleIcon from '@/components/WaffleIcon';
 import { 
-  Coffee, 
   Plus, 
   Minus, 
   ShoppingCart, 
@@ -146,9 +146,7 @@ function OrderApp() {
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">{tableOrQueue}</p>
             </div>
           </div>
-          <div className="rounded-2xl bg-red-50 p-3 text-red-600 shadow-inner">
-            <Coffee className="h-6 w-6" />
-          </div>
+          <WaffleIcon size={32} className="text-red-600" />
         </div>
       </header>
 
