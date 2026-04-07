@@ -5,12 +5,14 @@ import "./globals.css";
 const prompt = Prompt({
   variable: "--font-prompt",
   subsets: ["latin", "thai"],
-  weight: ["300", "400", "500", "600", "700", "800"],
+  weight: ["400", "600", "700"],
+  display: "swap",
+  preload: true,
 });
 
 export const metadata: Metadata = {
   title: "Artee Waffle Hongkong",
-  description: "Real-time waffle ordering and analytics",
+  description: "สั่งวาฟเฟิลฮ่องกงได้ที่นี่!",
 };
 
 export default function RootLayout({

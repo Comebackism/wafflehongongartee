@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { fetchMenus, submitOrder, MenuItem, OrderItem } from '@/lib/firebase/api';
+import { fetchMenus, submitOrder, MenuItem, OrderItem, DEFAULT_MENUS } from '@/lib/firebase/api';
 import { 
   Coffee, 
   Plus, 
@@ -16,8 +16,8 @@ function OrderApp() {
   const searchParams = useSearchParams();
   const tableOrQueue = searchParams.get('table') || searchParams.get('queue') || 'หน้าร้าน (Walk-in)';
 
-  const [menus, setMenus] = useState<MenuItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [menus, setMenus] = useState<MenuItem[]>(DEFAULT_MENUS); // แสดงทันที ไม่ต้องรอ loader
+  const [loading, setLoading] = useState(false);
   const [cart, setCart] = useState<OrderItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState<{id: string, name: string} | null>(null);
@@ -28,13 +28,11 @@ function OrderApp() {
   const [selectedToppings, setSelectedToppings] = useState<MenuItem[]>([]);
 
   useEffect(() => {
-    fetchMenus().then((data) => {
-      setMenus(data);
-      setLoading(false);
-    }).catch((err) => {
-      console.error(err);
-      setLoading(false);
-    });
+    // ถ้าต่อ Firebase จริง ให้ดึงและอัปเดทเมนูใน background
+    const isFirebaseConfigured = !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+    if (isFirebaseConfigured) {
+      fetchMenus().then(setMenus).catch(console.error);
+    }
   }, []);
 
   const waffles = useMemo(() => menus.filter(m => m.category === 'waffle'), [menus]);

@@ -31,49 +31,65 @@ export type Order = {
 
 const IS_FIREBASE_CONFIGURED = !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
 
+// Static default menus — ใช้เป็นค่าเริ่มต้น แสดงทันทีโดยไม่ต้องรอ fetch
+export const DEFAULT_MENUS: MenuItem[] = [
+  { id: 'm1', name: 'แป้ง original', description: 'วาฟเฟิลฮ่องกง แป้งกรอบนอกนุ่มใน คลาสสิกสุดๆ', price: 30, category: 'waffle' },
+  { id: 's1', name: 'ชีส', description: '', price: 5, category: 'savory' },
+  { id: 's2', name: 'ปูอัด', description: '', price: 5, category: 'savory' },
+  { id: 's3', name: 'ไส้กรอก', description: '', price: 5, category: 'savory' },
+  { id: 'sw1', name: 'โอริโอ้', description: '', price: 5, category: 'sweet' },
+  { id: 'sw2', name: 'ฝอยทอง', description: '', price: 5, category: 'sweet' },
+  { id: 'sw3', name: 'โอวัลติน', description: '', price: 5, category: 'sweet' },
+  { id: 'sw4', name: 'ช็อกชิพ', description: '', price: 5, category: 'sweet' },
+  { id: 'sw5', name: 'ไวท์ช็อค', description: '', price: 5, category: 'sweet' },
+];
+
+// Module-level cache — เมนูจะถูกดึงครั้งเดียวต่อ session
+let menuCache: MenuItem[] | null = null;
+
 // 1. Fetch available menus
 export const fetchMenus = async (): Promise<MenuItem[]> => {
+  if (menuCache) return menuCache;
   try {
     const menusCol = collection(db, 'menus');
     const menuSnapshot = await getDocs(menusCol);
     
     if (menuSnapshot.empty) {
       // Realistic mock data as requested
-      return [
+      menuCache = [
         { id: 'm1', name: 'แป้ง original', description: 'วาฟเฟิลฮ่องกง แป้งกรอบนอกนุ่มใน คลาสสิกสุดๆ', price: 30, category: 'waffle' },
-        // ไส้คาว
         { id: 's1', name: 'ชีส', description: '', price: 5, category: 'savory' },
         { id: 's2', name: 'ปูอัด', description: '', price: 5, category: 'savory' },
         { id: 's3', name: 'ไส้กรอก', description: '', price: 5, category: 'savory' },
-        // ไส้หวาน
         { id: 'sw1', name: 'โอริโอ้', description: '', price: 5, category: 'sweet' },
         { id: 'sw2', name: 'ฝอยทอง', description: '', price: 5, category: 'sweet' },
         { id: 'sw3', name: 'โอวัลติน', description: '', price: 5, category: 'sweet' },
         { id: 'sw4', name: 'ช็อกชิพ', description: '', price: 5, category: 'sweet' },
         { id: 'sw5', name: 'ไวท์ช็อค', description: '', price: 5, category: 'sweet' },
       ];
+      return menuCache;
     }
 
-    return menuSnapshot.docs.map(doc => ({
+    menuCache = menuSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     } as MenuItem));
+    return menuCache;
   } catch (error) {
     console.error("Error fetching menus: ", error);
     if (!IS_FIREBASE_CONFIGURED || process.env.NODE_ENV === "development") {
-        return [
+        menuCache = [
             { id: 'm1', name: 'แป้ง original', description: 'วาฟเฟิลฮ่องกง แป้งกรอบนอกนุ่มใน คลาสสิกสุดๆ', price: 30, category: 'waffle' },
-            // ไส้คาว
             { id: 's1', name: 'ชีส', description: '', price: 5, category: 'savory' },
             { id: 's2', name: 'ปูอัด', description: '', price: 5, category: 'savory' },
             { id: 's3', name: 'ไส้กรอก', description: '', price: 5, category: 'savory' },
-            // ไส้หวาน
             { id: 'sw1', name: 'โอริโอ้', description: '', price: 5, category: 'sweet' },
             { id: 'sw2', name: 'ฝอยทอง', description: '', price: 5, category: 'sweet' },
             { id: 'sw3', name: 'โอวัลติน', description: '', price: 5, category: 'sweet' },
             { id: 'sw4', name: 'ช็อกชิพ', description: '', price: 5, category: 'sweet' },
             { id: 'sw5', name: 'ไวท์ช็อค', description: '', price: 5, category: 'sweet' },
           ];
+        return menuCache;
     }
     throw error;
   }
