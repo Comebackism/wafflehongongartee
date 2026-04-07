@@ -98,7 +98,7 @@ export const fetchMenus = async (): Promise<MenuItem[]> => {
 // 2. Submit new document to orders collection
 export const submitOrder = async (orderData: Omit<Order, 'id' | 'createdAt' | 'status'>) => {
   if (!IS_FIREBASE_CONFIGURED) {
-     const mockId = "dev-order-" + Math.floor(Math.random() * 10000);
+     const mockId = "order-" + Math.floor(Math.random() * 10000);
      const newOrder = {
        ...orderData,
        id: mockId,
