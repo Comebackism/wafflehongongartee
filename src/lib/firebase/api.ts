@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, serverTimestamp, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from './config';
 
 export type MenuItem = {
@@ -133,6 +133,58 @@ export const submitOrder = async (orderData: Omit<Order, 'id' | 'createdAt' | 's
 };
 
 
+// 4. Local storage helpers for tracking customer's own orders
+const MY_ORDER_IDS_KEY = 'myOrderIds';
+
+export const saveMyOrderId = (orderId: string) => {
+  const ids: string[] = JSON.parse(localStorage.getItem(MY_ORDER_IDS_KEY) || '[]');
+  if (!ids.includes(orderId)) {
+    ids.push(orderId);
+    localStorage.setItem(MY_ORDER_IDS_KEY, JSON.stringify(ids));
+  }
+};
+
+export const getMyOrderIds = (): string[] => {
+  return JSON.parse(localStorage.getItem(MY_ORDER_IDS_KEY) || '[]');
+};
+
+// 5. Fetch customer's own orders by their saved IDs
+export const fetchMyOrders = async (): Promise<Order[]> => {
+  const orderIds = getMyOrderIds();
+  if (orderIds.length === 0) return [];
+
+  if (!IS_FIREBASE_CONFIGURED) {
+    // LocalStorage fallback
+    const allOrders: Order[] = JSON.parse(localStorage.getItem('localOrders') || '[]');
+    return allOrders
+      .filter((o: any) => orderIds.includes(o.id))
+      .map((o: any) => ({
+        ...o,
+        createdAt: new Date(o.createdAt),
+      }))
+      .reverse(); // newest first
+  }
+
+  // Firebase — fetch each doc by ID
+  try {
+    const results: Order[] = [];
+    for (const id of orderIds) {
+      const docRef = doc(db, 'orders', id);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        results.push({
+          id: docSnap.id,
+          ...docSnap.data(),
+          createdAt: docSnap.data().createdAt?.toDate?.() || new Date(),
+        } as Order);
+      }
+    }
+    return results.reverse(); // newest first
+  } catch (error) {
+    console.error('Error fetching my orders:', error);
+    throw error;
+  }
+};
 // 3. Update order status
 export const updateOrderStatus = async (orderId: string, status: OrderStatus) => {
   if (!IS_FIREBASE_CONFIGURED) {
@@ -151,4 +203,3 @@ export const updateOrderStatus = async (orderId: string, status: OrderStatus) =>
     throw error;
   }
 };
-

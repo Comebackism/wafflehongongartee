@@ -1,22 +1,49 @@
 "use client";
 
-import { useState, useEffect, Suspense, useMemo } from 'react';
+import { useState, useEffect, Suspense, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { fetchMenus, submitOrder, MenuItem, OrderItem, DEFAULT_MENUS } from '@/lib/firebase/api';
+import { fetchMenus, submitOrder, fetchMyOrders, saveMyOrderId, getMyOrderIds, MenuItem, OrderItem, Order } from '@/lib/firebase/api';
 import WaffleIcon from '@/components/WaffleIcon';
 import { 
   Plus, 
   Minus, 
   ShoppingCart, 
   Check, 
-  Loader2 
+  Loader2,
+  ClipboardList,
+  X,
+  Clock,
+  ChefHat,
+  UtensilsCrossed,
+  CheckCircle2,
+  Package,
+  RefreshCw
 } from 'lucide-react';
+
+const STATUS_CONFIG: Record<string, { label: string; color: string; bgColor: string; icon: any }> = {
+  pending: { label: 'รอรับออเดอร์', color: 'text-amber-600', bgColor: 'bg-amber-50 border-amber-200', icon: Clock },
+  cooking: { label: 'กำลังทำ', color: 'text-orange-600', bgColor: 'bg-orange-50 border-orange-200', icon: ChefHat },
+  ready: { label: 'พร้อมเสิร์ฟ', color: 'text-green-600', bgColor: 'bg-green-50 border-green-200', icon: UtensilsCrossed },
+  served: { label: 'เสิร์ฟแล้ว', color: 'text-blue-600', bgColor: 'bg-blue-50 border-blue-200', icon: CheckCircle2 },
+  cancelled: { label: 'ยกเลิก', color: 'text-red-600', bgColor: 'bg-red-50 border-red-200', icon: X },
+};
 
 function OrderApp() {
   const searchParams = useSearchParams();
   const tableOrQueue = searchParams.get('table') || searchParams.get('queue') || 'หน้าร้าน (Walk-in)';
 
-  const [menus, setMenus] = useState<MenuItem[]>(DEFAULT_MENUS); // แสดงทันที ไม่ต้องรอ loader
+  const [menus, setMenus] = useState<MenuItem[]>([
+    { id: 'm1', name: 'แป้ง original', description: 'วาฟเฟิลฮ่องกง แป้งกรอบนอกนุ่มใน คลาสสิกสุดๆ', price: 30, category: 'waffle' },
+    { id: 's1', name: 'ชีส', description: '', price: 5, category: 'savory' },
+    { id: 's2', name: 'ปูอัด', description: '', price: 5, category: 'savory' },
+    { id: 's3', name: 'ไส้กรอก', description: '', price: 5, category: 'savory' },
+    { id: 's4', name: 'แฮม', description: '', price: 5, category: 'savory' },
+    { id: 'sw1', name: 'โอริโอ้', description: '', price: 5, category: 'sweet' },
+    { id: 'sw2', name: 'ฝอยทอง', description: '', price: 5, category: 'sweet' },
+    { id: 'sw3', name: 'กล้วย', description: '', price: 5, category: 'sweet' },
+    { id: 'sw4', name: 'ช็อกโกแลตชิพ', description: '', price: 5, category: 'sweet' },
+    { id: 'sw5', name: 'ไวท์ช็อกโกแลต', description: '', price: 5, category: 'sweet' },
+  ]); // แสดงทันที ไม่ต้องรอ loader
   const [loading, setLoading] = useState(false);
   const [cart, setCart] = useState<OrderItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,12 +54,20 @@ function OrderApp() {
   const [selectedWaffle, setSelectedWaffle] = useState<MenuItem | null>(null);
   const [selectedToppings, setSelectedToppings] = useState<MenuItem[]>([]);
 
+  // My Orders state
+  const [showMyOrders, setShowMyOrders] = useState(false);
+  const [myOrders, setMyOrders] = useState<Order[]>([]);
+  const [myOrdersLoading, setMyOrdersLoading] = useState(false);
+  const [myOrderCount, setMyOrderCount] = useState(0);
+
   useEffect(() => {
     // ถ้าต่อ Firebase จริง ให้ดึงและอัปเดทเมนูใน background
     const isFirebaseConfigured = !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
     if (isFirebaseConfigured) {
       fetchMenus().then(setMenus).catch(console.error);
     }
+    // Load order count from localStorage
+    setMyOrderCount(getMyOrderIds().length);
   }, []);
 
   const waffles = useMemo(() => menus.filter(m => m.category === 'waffle'), [menus]);
@@ -90,6 +125,9 @@ function OrderApp() {
         tableOrQueue: tableOrQueue,
         customerName: finalName
       });
+      // Save order ID for "My Orders" tracking
+      saveMyOrderId(orderId);
+      setMyOrderCount(getMyOrderIds().length);
       setOrderComplete({ id: orderId, name: finalName });
       setCart([]);
       setCustomerName('');
@@ -98,6 +136,23 @@ function OrderApp() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const loadMyOrders = useCallback(async () => {
+    setMyOrdersLoading(true);
+    try {
+      const orders = await fetchMyOrders();
+      setMyOrders(orders);
+    } catch (err) {
+      console.error('Error loading my orders:', err);
+    } finally {
+      setMyOrdersLoading(false);
+    }
+  }, []);
+
+  const handleOpenMyOrders = () => {
+    setShowMyOrders(true);
+    loadMyOrders();
   };
 
   if (loading) {
@@ -124,12 +179,21 @@ function OrderApp() {
              <p className="mt-1 font-mono text-lg font-bold text-red-600">{orderComplete.id}</p>
            </div>
         </div>
-        <button 
-          onClick={() => setOrderComplete(null)} 
-          className="mt-8 text-red-600 font-semibold hover:text-red-700 transition"
-        >
-          สั่งอะไรเพิ่มอีกไหม?
-        </button>
+        <div className="mt-8 flex flex-col items-center gap-3">
+          <button 
+            onClick={() => setOrderComplete(null)} 
+            className="text-red-600 font-semibold hover:text-red-700 transition"
+          >
+            สั่งอะไรเพิ่มอีกไหม?
+          </button>
+          <button 
+            onClick={() => { setOrderComplete(null); handleOpenMyOrders(); }} 
+            className="flex items-center gap-2 text-gray-500 font-medium hover:text-gray-700 transition text-sm"
+          >
+            <ClipboardList className="h-4 w-4" />
+            ดูออเดอร์ทั้งหมดของฉัน
+          </button>
+        </div>
       </div>
     );
   }
@@ -146,7 +210,23 @@ function OrderApp() {
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">{tableOrQueue}</p>
             </div>
           </div>
-          <WaffleIcon size={32} className="text-red-600" />
+          <div className="flex items-center gap-3">
+            {/* My Orders Button */}
+            <button
+              id="my-orders-btn"
+              onClick={handleOpenMyOrders}
+              className="relative flex items-center gap-1.5 rounded-xl bg-gray-50 px-3 py-2 text-sm font-bold text-gray-600 transition-all hover:bg-red-50 hover:text-red-600 active:scale-95 border border-gray-100 hover:border-red-200"
+            >
+              <ClipboardList className="h-4 w-4" />
+              <span className="hidden sm:inline">ออเดอร์ของฉัน</span>
+              {myOrderCount > 0 && (
+                <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-black text-white shadow-md shadow-red-200">
+                  {myOrderCount}
+                </span>
+              )}
+            </button>
+            <WaffleIcon size={32} className="text-red-600" />
+          </div>
         </div>
       </header>
 
@@ -326,6 +406,137 @@ function OrderApp() {
               >
                 เพิ่มเมนู — {selectedWaffle.price + selectedToppings.reduce((a, t) => a + t.price, 0)} บาท
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== My Orders Panel ===== */}
+      {showMyOrders && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-gray-900/60 backdrop-blur-sm transition-all md:items-center md:justify-center">
+          {/* Backdrop click to close */}
+          <div className="absolute inset-0" onClick={() => setShowMyOrders(false)}></div>
+
+          <div className="relative w-full max-w-lg animate-in slide-in-from-bottom-8 md:zoom-in-95 duration-300 rounded-t-[2rem] md:rounded-[2rem] bg-white shadow-2xl flex flex-col max-h-[85vh]">
+            {/* Panel Header */}
+            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5 md:px-8 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="rounded-xl bg-red-50 p-2.5 text-red-600">
+                  <Package className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-extrabold text-gray-900">ออเดอร์ของฉัน</h2>
+                  <p className="text-xs font-medium text-gray-400 mt-0.5">{myOrders.length} รายการ</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={loadMyOrders}
+                  disabled={myOrdersLoading}
+                  className="rounded-full bg-gray-50 p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors disabled:opacity-50"
+                  title="รีเฟรช"
+                >
+                  <RefreshCw className={`h-4 w-4 ${myOrdersLoading ? 'animate-spin' : ''}`} />
+                </button>
+                <button
+                  onClick={() => setShowMyOrders(false)}
+                  className="rounded-full bg-gray-100 p-2 text-gray-500 hover:bg-red-100 hover:text-red-600 transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Panel Content */}
+            <div className="flex-1 overflow-y-auto px-6 py-5 md:px-8" style={{ scrollbarWidth: 'none' }}>
+              {myOrdersLoading && myOrders.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16">
+                  <Loader2 className="h-8 w-8 animate-spin text-red-400 mb-4" />
+                  <p className="text-gray-400 font-medium">กำลังโหลดออเดอร์...</p>
+                </div>
+              ) : myOrders.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16">
+                  <div className="rounded-full bg-gray-100 p-6 mb-4">
+                    <ClipboardList className="h-10 w-10 text-gray-300" />
+                  </div>
+                  <p className="text-gray-500 font-bold text-lg">ยังไม่มีออเดอร์</p>
+                  <p className="text-gray-400 text-sm mt-1">เริ่มสั่งวาฟเฟิลกันเลย!</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {myOrders.map((order) => {
+                    const statusInfo = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
+                    const StatusIcon = statusInfo.icon;
+                    return (
+                      <div
+                        key={order.id}
+                        className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:shadow-md"
+                      >
+                        {/* Order Header */}
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-bold text-gray-800">{order.customerName}</span>
+                              <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-500 border border-gray-200">
+                                {order.tableOrQueue}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-400 font-medium">
+                              {order.createdAt instanceof Date
+                                ? order.createdAt.toLocaleString('th-TH', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })
+                                : ''}
+                            </p>
+                          </div>
+                          {/* Status Badge */}
+                          <div className={`flex items-center gap-1.5 rounded-full border px-3 py-1 ${statusInfo.bgColor}`}>
+                            <StatusIcon className={`h-3.5 w-3.5 ${statusInfo.color}`} />
+                            <span className={`text-xs font-bold ${statusInfo.color}`}>
+                              {statusInfo.label}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Order Items */}
+                        <div className="border-t border-gray-50 pt-3 space-y-2">
+                          {order.items.map((item: OrderItem, idx: number) => (
+                            <div key={idx} className="flex justify-between text-sm">
+                              <div>
+                                <span className="font-semibold text-gray-700">
+                                  {item.quantity}x {item.name}
+                                </span>
+                                {item.toppings?.length > 0 && (
+                                  <p className="text-xs text-gray-400 font-medium pl-4 mt-0.5">
+                                    + {item.toppings.map((t) => t.name).join(', ')}
+                                  </p>
+                                )}
+                              </div>
+                              <span className="font-bold text-gray-600 shrink-0">
+                                {item.price + (item.toppings?.reduce((a, t) => a + t.price, 0) || 0)} ฿
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Order Total */}
+                        <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
+                          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">ยอดรวม</span>
+                          <span className="text-lg font-black text-red-600">{order.totalPrice} บาท</span>
+                        </div>
+
+                        {/* Order ID */}
+                        <div className="mt-2 flex justify-end">
+                          <span className="font-mono text-[10px] text-gray-300">#{order.id}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>
