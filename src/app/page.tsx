@@ -140,7 +140,7 @@ function OrderApp() {
       <header className="sticky top-0 z-10 bg-white/90 backdrop-blur-md px-6 py-5 shadow-sm border-b border-red-100">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl md:text-2xl font-extrabold text-red-700 tracking-tight uppercase">Artee Waffle Hongkong</h1>
+            <h1 className="text-xl md:text-2xl font-extrabold text-red-700 tracking-tight uppercase">Waffle Tee Ob</h1>
             <div className="mt-1 flex items-center gap-2">
                 <span className="flex h-2 w-2 rounded-full bg-green-500"></span>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">{tableOrQueue}</p>

@@ -37,11 +37,12 @@ export const DEFAULT_MENUS: MenuItem[] = [
   { id: 's1', name: 'ชีส', description: '', price: 5, category: 'savory' },
   { id: 's2', name: 'ปูอัด', description: '', price: 5, category: 'savory' },
   { id: 's3', name: 'ไส้กรอก', description: '', price: 5, category: 'savory' },
+  { id: 's4', name: 'แฮม', description: '', price: 5, category: 'savory' },
   { id: 'sw1', name: 'โอริโอ้', description: '', price: 5, category: 'sweet' },
   { id: 'sw2', name: 'ฝอยทอง', description: '', price: 5, category: 'sweet' },
-  { id: 'sw3', name: 'โอวัลติน', description: '', price: 5, category: 'sweet' },
-  { id: 'sw4', name: 'ช็อกชิพ', description: '', price: 5, category: 'sweet' },
-  { id: 'sw5', name: 'ไวท์ช็อค', description: '', price: 5, category: 'sweet' },
+  { id: 'sw3', name: 'กล้วย', description: '', price: 5, category: 'sweet' },
+  { id: 'sw4', name: 'ช็อกโกแลตชิพ', description: '', price: 5, category: 'sweet' },
+  { id: 'sw5', name: 'ไวท์ช็อกโกแลต', description: '', price: 5, category: 'sweet' },
 ];
 
 // Module-level cache — เมนูจะถูกดึงครั้งเดียวต่อ session
@@ -53,7 +54,7 @@ export const fetchMenus = async (): Promise<MenuItem[]> => {
   try {
     const menusCol = collection(db, 'menus');
     const menuSnapshot = await getDocs(menusCol);
-    
+
     if (menuSnapshot.empty) {
       // Realistic mock data as requested
       menuCache = [
@@ -61,11 +62,12 @@ export const fetchMenus = async (): Promise<MenuItem[]> => {
         { id: 's1', name: 'ชีส', description: '', price: 5, category: 'savory' },
         { id: 's2', name: 'ปูอัด', description: '', price: 5, category: 'savory' },
         { id: 's3', name: 'ไส้กรอก', description: '', price: 5, category: 'savory' },
+        { id: 's4', name: 'แฮม', description: '', price: 5, category: 'savory' },
         { id: 'sw1', name: 'โอริโอ้', description: '', price: 5, category: 'sweet' },
         { id: 'sw2', name: 'ฝอยทอง', description: '', price: 5, category: 'sweet' },
-        { id: 'sw3', name: 'โอวัลติน', description: '', price: 5, category: 'sweet' },
-        { id: 'sw4', name: 'ช็อกชิพ', description: '', price: 5, category: 'sweet' },
-        { id: 'sw5', name: 'ไวท์ช็อค', description: '', price: 5, category: 'sweet' },
+        { id: 'sw3', name: 'กล้วย', description: '', price: 5, category: 'sweet' },
+        { id: 'sw4', name: 'ช็อกโกแลตชิพ', description: '', price: 5, category: 'sweet' },
+        { id: 'sw5', name: 'ไวท์ช็อกโกแลต', description: '', price: 5, category: 'sweet' },
       ];
       return menuCache;
     }
@@ -78,18 +80,19 @@ export const fetchMenus = async (): Promise<MenuItem[]> => {
   } catch (error) {
     console.error("Error fetching menus: ", error);
     if (!IS_FIREBASE_CONFIGURED || process.env.NODE_ENV === "development") {
-        menuCache = [
-            { id: 'm1', name: 'แป้ง original', description: 'วาฟเฟิลฮ่องกง แป้งกรอบนอกนุ่มใน คลาสสิกสุดๆ', price: 30, category: 'waffle' },
-            { id: 's1', name: 'ชีส', description: '', price: 5, category: 'savory' },
-            { id: 's2', name: 'ปูอัด', description: '', price: 5, category: 'savory' },
-            { id: 's3', name: 'ไส้กรอก', description: '', price: 5, category: 'savory' },
-            { id: 'sw1', name: 'โอริโอ้', description: '', price: 5, category: 'sweet' },
-            { id: 'sw2', name: 'ฝอยทอง', description: '', price: 5, category: 'sweet' },
-            { id: 'sw3', name: 'โอวัลติน', description: '', price: 5, category: 'sweet' },
-            { id: 'sw4', name: 'ช็อกชิพ', description: '', price: 5, category: 'sweet' },
-            { id: 'sw5', name: 'ไวท์ช็อค', description: '', price: 5, category: 'sweet' },
-          ];
-        return menuCache;
+      menuCache = [
+        { id: 'm1', name: 'แป้ง original', description: 'วาฟเฟิลฮ่องกง แป้งกรอบนอกนุ่มใน คลาสสิกสุดๆ', price: 30, category: 'waffle' },
+        { id: 's1', name: 'ชีส', description: '', price: 5, category: 'savory' },
+        { id: 's2', name: 'ปูอัด', description: '', price: 5, category: 'savory' },
+        { id: 's3', name: 'ไส้กรอก', description: '', price: 5, category: 'savory' },
+        { id: 's4', name: 'แฮม', description: '', price: 5, category: 'savory' },
+        { id: 'sw1', name: 'โอริโอ้', description: '', price: 5, category: 'sweet' },
+        { id: 'sw2', name: 'ฝอยทอง', description: '', price: 5, category: 'sweet' },
+        { id: 'sw3', name: 'กล้วย', description: '', price: 5, category: 'sweet' },
+        { id: 'sw4', name: 'ช็อกโกแลตชิพ', description: '', price: 5, category: 'sweet' },
+        { id: 'sw5', name: 'ไวท์ช็อกโกแลต', description: '', price: 5, category: 'sweet' },
+      ];
+      return menuCache;
     }
     throw error;
   }
@@ -98,21 +101,21 @@ export const fetchMenus = async (): Promise<MenuItem[]> => {
 // 2. Submit new document to orders collection
 export const submitOrder = async (orderData: Omit<Order, 'id' | 'createdAt' | 'status'>) => {
   if (!IS_FIREBASE_CONFIGURED) {
-     const mockId = "order-" + Math.floor(Math.random() * 10000);
-     const newOrder = {
-       ...orderData,
-       id: mockId,
-       status: 'pending',
-       createdAt: new Date().toISOString()
-     };
-     // Local storage sync
-     const currentOrders = JSON.parse(localStorage.getItem('localOrders') || '[]');
-     currentOrders.push(newOrder);
-     localStorage.setItem('localOrders', JSON.stringify(currentOrders));
-     // Trigger an artificial storage event for the same tab
-     window.dispatchEvent(new Event('storage'));
-     console.warn("Used LocalStorage fallback for submission");
-     return mockId;
+    const mockId = "order-" + Math.floor(Math.random() * 10000);
+    const newOrder = {
+      ...orderData,
+      id: mockId,
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    // Local storage sync
+    const currentOrders = JSON.parse(localStorage.getItem('localOrders') || '[]');
+    currentOrders.push(newOrder);
+    localStorage.setItem('localOrders', JSON.stringify(currentOrders));
+    // Trigger an artificial storage event for the same tab
+    window.dispatchEvent(new Event('storage'));
+    console.warn("Used LocalStorage fallback for submission");
+    return mockId;
   }
 
   try {

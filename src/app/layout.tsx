@@ -11,7 +11,7 @@ const prompt = Prompt({
 });
 
 export const metadata: Metadata = {
-  title: "Artee Waffle Hongkong",
+  title: "Waffle Tee Ob",
   description: "สั่งวาฟเฟิลฮ่องกงได้ที่นี่!",
 };
 

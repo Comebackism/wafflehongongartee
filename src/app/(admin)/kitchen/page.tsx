@@ -96,7 +96,7 @@ export default function KitchenDashboard() {
     <div className="min-h-screen bg-gray-50 p-6 md:p-8 font-sans selection:bg-red-200">
       <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between border-b border-gray-200 pb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-red-700 tracking-tight">ระบบจัดการหลังครัว (Artee Waffle)</h1>
+          <h1 className="text-3xl font-extrabold text-red-700 tracking-tight">ระบบจัดการหลังครัว (Waffle Tee Ob)</h1>
           <p className="text-gray-500 mt-2 font-medium">คิวออเดอร์วาฟเฟิลแบบเรียลไทม์</p>
         </div>
         <div className="flex items-center gap-2 rounded-full bg-green-50 px-4 py-2 text-sm font-bold text-green-700 shadow-sm border border-green-200">

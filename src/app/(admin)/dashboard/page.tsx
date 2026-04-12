@@ -129,7 +129,7 @@ export default function SalesDashboard() {
     <div className="min-h-screen bg-slate-50 p-6 md:p-10 font-sans selection:bg-red-200">
       <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-red-700 tracking-tight">สรุปยอดขาย Artee Waffle</h1>
+          <h1 className="text-3xl font-extrabold text-red-700 tracking-tight">สรุปยอดขาย Waffle Tee Ob</h1>
           <p className="text-gray-500 mt-1 font-medium">Dashboard Analytics</p>
         </div>
         <button 
